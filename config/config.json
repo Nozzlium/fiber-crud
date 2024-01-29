@@ -1,0 +1,15 @@
+{
+    "app": {
+        "name": "fiber-crud",
+        "version": "1.0.0",
+        "author": "Cesa Anwar (Nozzlium)"
+    },
+    "database": {
+        "show_sql": true,
+        "host": "localhost",
+        "port": 3306,
+        "username": "",
+        "password": "",
+        "database": ""
+    }
+}
