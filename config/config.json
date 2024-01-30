@@ -8,8 +8,8 @@
         "show_sql": true,
         "host": "localhost",
         "port": 3306,
-        "username": "",
-        "password": "",
-        "database": ""
+        "username": "fiber-crud",
+        "password": "password",
+        "database": "fiber_crud"
     }
 }

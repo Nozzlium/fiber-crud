@@ -15,6 +15,16 @@ type UserServiceImpl struct {
 	UserRepository repository.UserRepository
 }
 
+func NewUserService(
+	db *sql.DB,
+	userRepository repository.UserRepository,
+) *UserServiceImpl {
+	return &UserServiceImpl{
+		DB:             db,
+		UserRepository: userRepository,
+	}
+}
+
 func (service *UserServiceImpl) Create(ctx context.Context, user entity.User) (result.UserResult, error) {
 	tx, err := service.DB.Begin()
 	if err != nil {
@@ -29,17 +39,64 @@ func (service *UserServiceImpl) Create(ctx context.Context, user entity.User) (r
 }
 
 func (service *UserServiceImpl) Get(ctx context.Context, param param.UserParam) ([]result.UserResult, error) {
-	panic("not implemented") // TODO: Implement
+	tx, err := service.DB.Begin()
+	if err != nil {
+		return []result.UserResult{}, err
+	}
+	users, err := service.UserRepository.Get(
+		ctx,
+		tx,
+		&param,
+	)
+	return helper.UserEntitiesToUserResults(users), err
 }
 
 func (service *UserServiceImpl) GetById(ctx context.Context, user entity.User) (result.UserResult, error) {
-	panic("not implemented") // TODO: Implement
+	tx, err := service.DB.Begin()
+	if err != nil {
+		return result.UserResult{}, err
+	}
+	selected, err := service.UserRepository.GetById(
+		ctx,
+		tx,
+		user,
+	)
+	return helper.UserEntityToUserResult(selected), err
 }
 
 func (service *UserServiceImpl) Update(ctx context.Context, user entity.User) (result.UserResult, error) {
-	panic("not implemented") // TODO: Implement
+	tx, err := service.DB.Begin()
+	if err != nil {
+		return result.UserResult{}, err
+	}
+	current, err := service.UserRepository.GetById(
+		ctx,
+		tx,
+		user,
+	)
+	if user.Name != "" {
+		current.Name = user.Name
+	}
+	if user.PhoneNumber != "" {
+		current.PhoneNumber = user.PhoneNumber
+	}
+	updated, err := service.UserRepository.Update(
+		ctx,
+		tx,
+		current,
+	)
+	return helper.UserEntityToUserResult(updated), err
 }
 
 func (service *UserServiceImpl) Delete(ctx context.Context, user entity.User) (result.UserResult, error) {
-	panic("not implemented") // TODO: Implement
+	tx, err := service.DB.Begin()
+	if err != nil {
+		return result.UserResult{}, err
+	}
+	deleted, err := service.UserRepository.Delete(
+		ctx,
+		tx,
+		user,
+	)
+	return helper.UserEntityToUserResult(deleted), err
 }

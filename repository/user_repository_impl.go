@@ -11,16 +11,25 @@ import (
 type UserRepositoryImpl struct {
 }
 
+func NewUserRepository() *UserRepositoryImpl {
+	return &UserRepositoryImpl{}
+}
+
 func (repository *UserRepositoryImpl) Create(ctx context.Context, db *sql.Tx, user entity.User) (entity.User, error) {
 	result, err := db.ExecContext(
 		ctx,
-		"INSERT INTO user(name, phone_number) VALUES (?, ?)",
+		"INSERT INTO user(user_name, phone_number) VALUES (?, ?)",
 		user.Name,
 		user.PhoneNumber,
 	)
 	if err != nil {
 		return user, err
 	}
+	err = db.Commit()
+	if err != nil {
+		return entity.User{}, err
+	}
+
 	userID, err := result.LastInsertId()
 	user.ID = int32(userID)
 	return user, nil
@@ -29,7 +38,7 @@ func (repository *UserRepositoryImpl) Create(ctx context.Context, db *sql.Tx, us
 func (repository *UserRepositoryImpl) Get(ctx context.Context, db *sql.Tx, param *param.UserParam) ([]entity.User, error) {
 	rows, err := db.QueryContext(
 		ctx,
-		"SELECT id, name, phone_number from user LIMIT ? OFFSET ?",
+		"SELECT id, user_name, phone_number from user LIMIT ? OFFSET ?",
 		param.PageSize,
 		(param.PageNo-1)*param.PageSize,
 	)
@@ -54,10 +63,10 @@ func (repository *UserRepositoryImpl) Get(ctx context.Context, db *sql.Tx, param
 	return results, nil
 }
 
-func (repository *UserRepositoryImpl) GetById(ctx context.Context, db *sql.DB, user entity.User) (entity.User, error) {
+func (repository *UserRepositoryImpl) GetById(ctx context.Context, db *sql.Tx, user entity.User) (entity.User, error) {
 	row := db.QueryRowContext(
 		ctx,
-		"SELECT id, name, phone_number from user WHERE id = ? LIMIT 1",
+		"SELECT id, user_name, phone_number from user WHERE id = ? LIMIT 1",
 		user.ID,
 	)
 	var id int32
@@ -73,10 +82,10 @@ func (repository *UserRepositoryImpl) GetById(ctx context.Context, db *sql.DB, u
 	}, nil
 }
 
-func (repository *UserRepositoryImpl) Update(ctx context.Context, db *sql.DB, user entity.User) (entity.User, error) {
+func (repository *UserRepositoryImpl) Update(ctx context.Context, db *sql.Tx, user entity.User) (entity.User, error) {
 	result, err := db.ExecContext(
 		ctx,
-		"UPDATE user SET name = ?, phone_number = ? WHERE id = ?",
+		"UPDATE user SET user_name = ?, phone_number = ? WHERE id = ?",
 		user.Name,
 		user.PhoneNumber,
 		user.ID,
@@ -84,6 +93,11 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, db *sql.DB, us
 	if err != nil {
 		return user, err
 	}
+	err = db.Commit()
+	if err != nil {
+		return entity.User{}, err
+	}
+
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return entity.User{}, err
@@ -94,7 +108,7 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, db *sql.DB, us
 	return user, nil
 }
 
-func (repository *UserRepositoryImpl) Delete(ctx context.Context, db *sql.DB, user entity.User) (entity.User, error) {
+func (repository *UserRepositoryImpl) Delete(ctx context.Context, db *sql.Tx, user entity.User) (entity.User, error) {
 	result, err := db.ExecContext(
 		ctx,
 		"DELETE from user WHERE id = ?",
@@ -103,6 +117,11 @@ func (repository *UserRepositoryImpl) Delete(ctx context.Context, db *sql.DB, us
 	if err != nil {
 		return user, err
 	}
+	err = db.Commit()
+	if err != nil {
+		return entity.User{}, err
+	}
+
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return entity.User{}, err
